@@ -159,6 +159,8 @@ namespace Kratos
          */
         Vector CalculateBodyForces();
 
+        void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) override;
+
     private:
 
         Vector GetCurrentLengthArray() const;

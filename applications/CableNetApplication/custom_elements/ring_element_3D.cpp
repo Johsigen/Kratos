@@ -22,6 +22,7 @@
 #include "structural_mechanics_application_variables.h"
 #include "includes/checks.h"
 #include "utilities/atomic_utilities.h"
+#include "cable_net_application_variables.h"
 
 
 namespace Kratos {
@@ -407,6 +408,7 @@ inline Matrix RingElement3D::TotalStiffnessMatrix() const
 {
   const Matrix ElasticStiffnessMatrix = this->ElasticStiffnessMatrix();
   const Matrix GeometrixStiffnessMatrix = this->GeometricStiffnessMatrix();
+  KRATOS_WATCH(ElasticStiffnessMatrix+GeometrixStiffnessMatrix)
   return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix);
 }
 
@@ -702,6 +704,12 @@ Vector RingElement3D::CalculateBodyForces() {
 double RingElement3D::LinearStiffness() const
 {
     return (this->GetProperties()[CROSS_AREA] * this->GetProperties()[YOUNG_MODULUS] / this->GetRefLength());
+}
+
+void RingElement3D::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
+{
+  const double total_internal_force = this-> LinearStiffness() * this-> CalculateGreenLagrangeStrain() * this->GetCurrentLength();
+  this->SetValue(NORMALFORCE, total_internal_force);
 }
 
 void RingElement3D::save(Serializer &rSerializer) const {

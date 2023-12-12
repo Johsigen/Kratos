@@ -57,5 +57,6 @@ void KratosCableNetApplication::Register()
     KRATOS_REGISTER_ELEMENT("EmpiricalSpringElement3D2N", mEmpiricalSpringElement3D2N)
 
     KRATOS_REGISTER_VARIABLE(SPRING_DEFORMATION_EMPIRICAL_POLYNOMIAL)
+    KRATOS_REGISTER_VARIABLE(NORMALFORCE)
 }
 }  // namespace Kratos.
