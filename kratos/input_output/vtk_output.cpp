@@ -408,7 +408,8 @@ void VtkOutput::WriteCellType(const TContainerType& rContainer, std::ofstream& r
         { GeometryData::KratosGeometryType::Kratos_Triangle3D6,      22 },
         { GeometryData::KratosGeometryType::Kratos_Quadrilateral2D8, 23 },
         { GeometryData::KratosGeometryType::Kratos_Quadrilateral3D8, 23 },
-        { GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10,   24 }
+        { GeometryData::KratosGeometryType::Kratos_Tetrahedra3D10,   24 },
+        { GeometryData::KratosGeometryType::Kratos_generic_type,     9  }
 //         { GeometryData::KratosGeometryType::Kratos_Hexahedra3D20,    25 } // NOTE: Quadratic hexahedra (20) requires a conversor, order does not coincide with VTK
     };
     // Write entity types
