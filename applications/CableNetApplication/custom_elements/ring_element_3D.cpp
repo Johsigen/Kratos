@@ -408,7 +408,6 @@ inline Matrix RingElement3D::TotalStiffnessMatrix() const
 {
   const Matrix ElasticStiffnessMatrix = this->ElasticStiffnessMatrix();
   const Matrix GeometrixStiffnessMatrix = this->GeometricStiffnessMatrix();
-  KRATOS_WATCH(ElasticStiffnessMatrix+GeometrixStiffnessMatrix)
   return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix);
 }
 
