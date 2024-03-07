@@ -222,11 +222,14 @@ double RingElement3D::GetCurrentLength() const
 
 double RingElement3D::GetRefLength() const
 {
+  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
   Vector segment_lengths = this->GetRefLengthArray();
   double length = 0.0;
-  for (int i=0;i<number_of_segments;++i) length += segment_lengths[i];
+  for (int i = 0; i < number_of_segments; ++i)
+    length += segment_lengths[i];
+  length = std::sqrt(std::pow(length, 2.0) / (2 * prestress / CalculateEA() + 1));
   return length;
 }
 
