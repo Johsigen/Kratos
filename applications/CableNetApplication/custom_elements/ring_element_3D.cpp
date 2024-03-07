@@ -325,13 +325,8 @@ Vector RingElement3D::GetDirectionVectorNt() const
 
 Vector RingElement3D::GetInternalForces() const
 {
-  const double k_0            = this->LinearStiffness();
-  const double strain_gl      = this->CalculateGreenLagrangeStrain();
-  const double current_length = this->GetCurrentLength();
-
-  const double total_internal_force = k_0 * strain_gl * current_length;
-  const Vector internal_foces = this->GetDirectionVectorNt() * total_internal_force;
-  return internal_foces;
+  const Vector internal_forces = this->GetDirectionVectorNt() * this->CalculateNormalForce();
+  return internal_forces;
 }
 
 Matrix RingElement3D::ElasticStiffnessMatrix() const
@@ -344,8 +339,7 @@ Matrix RingElement3D::ElasticStiffnessMatrix() const
   const Vector direction_vector = this->GetDirectionVectorNt();
   elastic_stiffness_matrix = outer_prod(direction_vector,direction_vector);
   KRATOS_WATCH(elastic_stiffness_matrix);
-  elastic_stiffness_matrix *= this->LinearStiffness();
-  elastic_stiffness_matrix *= (1.0 + (3.0*this->CalculateGreenLagrangeStrain()));
+  elastic_stiffness_matrix *= this->CalculateEA() * this->GetCurrentLength() / std::pow(this->GetRefLength(),2.0);
   KRATOS_WATCH(elastic_stiffness_matrix);
   return elastic_stiffness_matrix;
 }
@@ -355,10 +349,6 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
   const int points_number = GetGeometry().PointsNumber();
   const int dimension = 3;
   const SizeType local_size = dimension*points_number;
-
-  const double k_0            = this->LinearStiffness();
-  const double strain_gl      = this->CalculateGreenLagrangeStrain();
-  const double current_length = this->GetCurrentLength();
 
   const Vector d_x = this->GetDeltaPositions(1);
   const Vector d_y = this->GetDeltaPositions(2);
@@ -404,7 +394,7 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
     }
   }
 
-  geometric_stiffness_matrix *= k_0 * strain_gl * current_length;
+  geometric_stiffness_matrix *= this->CalculateEA() * this->CalculateGreenLagrangeStrain();
   KRATOS_WATCH(geometric_stiffness_matrix);
   return geometric_stiffness_matrix;
 }
@@ -705,15 +695,18 @@ Vector RingElement3D::CalculateBodyForces() {
     return body_forces_global;
 }
 
-double RingElement3D::LinearStiffness() const
+double RingElement3D::CalculateEA() const
 {
-    return (this->GetProperties()[CROSS_AREA] * this->GetProperties()[YOUNG_MODULUS] / this->GetRefLength());
+    return this->GetProperties()[CROSS_AREA] * this->GetProperties()[YOUNG_MODULUS];
+}
+double RingElement3D::CalculateNormalForce() const
+{
+    return this->CalculateEA() * this-> CalculateGreenLagrangeStrain();
 }
 
 void RingElement3D::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
 {
-  const double total_internal_force = this-> LinearStiffness() * this-> CalculateGreenLagrangeStrain() * this->GetCurrentLength();
-  this->SetValue(NORMALFORCE, total_internal_force);
+  this->SetValue(NORMALFORCE, CalculateNormalForce());
 }
 
 void RingElement3D::save(Serializer &rSerializer) const {
