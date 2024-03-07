@@ -340,8 +340,10 @@ Matrix RingElement3D::ElasticStiffnessMatrix() const
   Matrix elastic_stiffness_matrix = ZeroMatrix(local_size,local_size);
   const Vector direction_vector = this->GetDirectionVectorNt();
   elastic_stiffness_matrix = outer_prod(direction_vector,direction_vector);
+  KRATOS_WATCH(elastic_stiffness_matrix);
   elastic_stiffness_matrix *= this->LinearStiffness();
   elastic_stiffness_matrix *= (1.0 + (3.0*this->CalculateGreenLagrangeStrain()));
+  KRATOS_WATCH(elastic_stiffness_matrix);
   return elastic_stiffness_matrix;
 }
 
@@ -400,7 +402,7 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
   }
 
   geometric_stiffness_matrix *= k_0 * strain_gl * current_length;
-
+  KRATOS_WATCH(geometric_stiffness_matrix);
   return geometric_stiffness_matrix;
 }
 
