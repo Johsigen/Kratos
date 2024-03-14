@@ -158,6 +158,8 @@ namespace Kratos
          * @brief This function calculates self-weight forces
          */
         Vector CalculateBodyForces();
+        
+        void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) override;
 
     private:
 
