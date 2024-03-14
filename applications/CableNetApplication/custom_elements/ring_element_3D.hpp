@@ -116,6 +116,11 @@ namespace Kratos
         Matrix GeometricStiffnessMatrix() const;
         inline Matrix TotalStiffnessMatrix() const;
 
+        double GetCurrentLength() const;
+        double GetRefLength() const;
+        double CalculateGreenLagrangeStrain() const;
+        double LinearStiffness() const;
+
         void CalculateLumpedMassVector(
             VectorType &rLumpedMassVector,
             const ProcessInfo& rCurrentProcessInfo) const override;
@@ -154,8 +159,6 @@ namespace Kratos
          */
         Vector CalculateBodyForces();
 
-        void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) override;
-
     private:
 
         Vector GetCurrentLengthArray() const;
@@ -163,11 +166,6 @@ namespace Kratos
         Vector GetDeltaPositions(const int& rDirection) const;
         Vector GetDirectionVectorNt() const;
         Vector GetInternalForces() const;
-        double CalculateEA() const;        
-        double GetCurrentLength() const;
-        double GetRefLength() const;
-        double CalculateGreenLagrangeStrain() const;
-        double CalculateNormalForce() const;
 
         friend class Serializer;
         void save(Serializer& rSerializer) const override;
