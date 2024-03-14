@@ -336,13 +336,18 @@ Matrix RingElement3D::ElasticStiffnessMatrix() const
   const int points_number = GetGeometry().PointsNumber();
   const int dimension = 3;
   const SizeType local_size = dimension*points_number;
-
+  double prestress = 0.00;
+    if (this->GetProperties().Has(TRUSS_PRESTRESS_PK2)) {
+        prestress = this->GetProperties()[TRUSS_PRESTRESS_PK2];
+    }
   Matrix elastic_stiffness_matrix = ZeroMatrix(local_size,local_size);
   const Vector direction_vector = this->GetDirectionVectorNt();
+  KRATOS_WATCH(direction_vector);
   elastic_stiffness_matrix = outer_prod(direction_vector,direction_vector);
   elastic_stiffness_matrix *= this->LinearStiffness();
   elastic_stiffness_matrix *= (1.0 + (3.0*this->CalculateGreenLagrangeStrain()));
-  return elastic_stiffness_matrix;
+  Matrix stabimat = IdentityMatrix(local_size,local_size)*prestress;
+  return elastic_stiffness_matrix+stabimat;
 }
 
 Matrix RingElement3D::GeometricStiffnessMatrix() const
