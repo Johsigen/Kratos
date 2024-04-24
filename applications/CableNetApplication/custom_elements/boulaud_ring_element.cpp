@@ -359,7 +359,6 @@ Matrix BoulaudRingElement::GeometricStiffnessMatrix() const
 
   for (int i=0;i<points_number;++i)
   {
-    const double current_length = lengths[i];
     Matrix sub_stiffness_matrix = ZeroMatrix(dimension,dimension);
     sub_stiffness_matrix(0, 0) = -std::pow(d_x[i],2.0)+std::pow(lengths[i],2.0);
     sub_stiffness_matrix(0, 1) = -d_x[i]*d_y[i];
@@ -373,7 +372,7 @@ Matrix BoulaudRingElement::GeometricStiffnessMatrix() const
     sub_stiffness_matrix(2, 1) = sub_stiffness_matrix(1, 2);
     sub_stiffness_matrix(2, 2) = -std::pow(d_z[i],2.0)+std::pow(lengths[i],2.0);
 
-    sub_stiffness_matrix /= std::pow(current_length,3.0);
+    sub_stiffness_matrix /= std::pow(lengths[i],3.0);
 
 
     if (i==points_number-1)
