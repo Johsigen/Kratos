@@ -195,6 +195,7 @@ Vector BoulaudRingElement::GetRefLengthArray() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
+  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
 
   Vector segment_lengths = ZeroVector(number_of_segments);
   for (int i=0;i<number_of_segments;++i)
@@ -207,6 +208,7 @@ Vector BoulaudRingElement::GetRefLengthArray() const
     const double dz = this->GetGeometry()[next_node_id].Z0() - this->GetGeometry()[i].Z0();
     segment_lengths[i] = std::sqrt((dx * dx) + (dy * dy) + (dz * dz));
   }
+  segment_lengths /= (prestress / CalculateEA() + 1);
   return segment_lengths;
 }
 
@@ -222,14 +224,12 @@ double BoulaudRingElement::GetCurrentLength() const
 
 double BoulaudRingElement::GetRefLength() const
 {
-  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
   Vector segment_lengths = this->GetRefLengthArray();
   double length = 0.0;
   for (int i = 0; i < number_of_segments; ++i)
     length += segment_lengths[i];
-  length = std::sqrt(std::pow(length, 2.0) / (2 * prestress / CalculateEA() + 1));
   return length;
 }
 
