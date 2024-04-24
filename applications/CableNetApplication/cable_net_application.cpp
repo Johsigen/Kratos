@@ -25,6 +25,8 @@
 #include "geometries/triangle_3d_3.h"
 #include "geometries/line_3d_2.h"
 #include "custom_geometries/line_3d_n.h"
+#include "geometries/triangle_3d_3.h"
+#include "geometries/quadrilateral_3d_4.h"
 
 namespace Kratos {
 
@@ -36,8 +38,8 @@ KratosCableNetApplication::KratosCableNetApplication():
     mSlidingCableElement3D3N(0, Element::GeometryType::Pointer(new Line3DN<NodeType >(Element::GeometryType::PointsArrayType(3)))),
     mRingElement3D4N(0, Element::GeometryType::Pointer(new Line3DN<NodeType >(Element::GeometryType::PointsArrayType(4)))),
     mRingElement3D3N(0, Element::GeometryType::Pointer(new Line3DN<NodeType >(Element::GeometryType::PointsArrayType(3)))),
-    mBoulaudRingElement3D3N(0, Element::GeometryType::Pointer(new Line3DN<NodeType>(Element::GeometryType::PointsArrayType(3)))),
-    mBoulaudRingElement3D4N(0, Element::GeometryType::Pointer(new Line3DN<NodeType>(Element::GeometryType::PointsArrayType(4)))),
+    mBoulaudRingElement3D3N(0, Element::GeometryType::Pointer(new Triangle3D3<NodeType>(Element::GeometryType::PointsArrayType(3)))),
+    mBoulaudRingElement3D4N(0, Element::GeometryType::Pointer(new Quadrilateral3D4<NodeType>(Element::GeometryType::PointsArrayType(4)))),
     mEmpiricalSpringElement3D2N(0, Element::GeometryType::Pointer(new Line3D2<NodeType >(Element::GeometryType::PointsArrayType(2))))
     {}
 
