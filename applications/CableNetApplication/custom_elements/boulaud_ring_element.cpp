@@ -280,11 +280,11 @@ Vector BoulaudRingElement::GetDeltaPositions(const int& rDirection) const
   return delta_position;
 }
 
-double BoulaudRingElement::CalculateGreenLagrangeStrain() const
+double BoulaudRingElement::CalculateEngineeringStrain() const
 {
   const double reference_length = this->GetRefLength();
   const double current_length = this->GetCurrentLength();
-  return (0.50 * (((current_length*current_length)-(reference_length*reference_length)) / (reference_length*reference_length)));
+  return ((current_length-reference_length) / reference_length);
 }
 
 Vector BoulaudRingElement::GetDirectionVectorNt() const
@@ -339,7 +339,7 @@ Matrix BoulaudRingElement::ElasticStiffnessMatrix() const
   const Vector direction_vector = this->GetDirectionVectorNt();
   elastic_stiffness_matrix = outer_prod(direction_vector,direction_vector);
 
-  elastic_stiffness_matrix *= this->CalculateEA() * this->GetCurrentLength() / std::pow(this->GetRefLength(),2.0);
+  elastic_stiffness_matrix *= this->CalculateEA() / this->GetRefLength();
 
   return elastic_stiffness_matrix;
 }
@@ -394,7 +394,7 @@ Matrix BoulaudRingElement::GeometricStiffnessMatrix() const
     }
   }
 
-  geometric_stiffness_matrix *= this->CalculateEA() * this->CalculateGreenLagrangeStrain();
+  geometric_stiffness_matrix *= this->CalculateEA() * this->CalculateEngineeringStrain();
 
   return geometric_stiffness_matrix;
 }
@@ -701,7 +701,7 @@ double BoulaudRingElement::CalculateEA() const
 }
 double BoulaudRingElement::CalculateNormalForce() const
 {
-    return this->CalculateEA() * this-> CalculateGreenLagrangeStrain();
+    return this->CalculateEA() * this-> CalculateEngineeringStrain();
 }
 
 void BoulaudRingElement::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)

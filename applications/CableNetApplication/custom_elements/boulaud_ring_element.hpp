@@ -164,7 +164,7 @@ namespace Kratos
         double CalculateEA() const;        
         double GetCurrentLength() const;
         double GetRefLength() const;
-        double CalculateGreenLagrangeStrain() const;
+        double CalculateEngineeringStrain() const;
         double CalculateNormalForce() const;
 
         friend class Serializer;
