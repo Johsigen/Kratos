@@ -323,9 +323,61 @@ Vector BoulaudRingElement::GetDirectionVectorNt() const
   return n_t;
 }
 
+Vector BoulaudRingElement::SpringForces() const
+{
+  const int points_number = GetGeometry().PointsNumber();
+  const int segment_number = points_number;
+  const int dimension = 3;
+
+  const SizeType local_size = dimension*points_number;
+  Vector internal_spring_forces = ZeroVector(local_size);
+
+  const Vector d_x = this->GetDeltaPositions(1);
+  const Vector d_y = this->GetDeltaPositions(2);
+  const Vector d_z = this->GetDeltaPositions(3);
+  const Vector lengths = this->GetCurrentLengthArray();
+  double L0 = GetRefLength();
+  const double grzl = 0.01;
+  const double L0_seg = L0 * grzl;
+  const double EA = this->CalculateEA();
+
+  double l_seg = 0.0;
+  for (int i = 0; i < segment_number; ++i)
+  {
+      l_seg = lengths[i];
+      if (l_seg/L0 < grzl)
+      {
+        double w = -std::log( l_seg / L0_seg ) * EA;
+        double delta_l = l_seg - L0_seg;
+        double spring_force = w * delta_l;
+
+        Vector dir_spring = ZeroVector(dimension);
+        dir_spring[0] = d_x[i];
+        dir_spring[1] = d_y[i];
+        dir_spring[2] = d_z[i];
+        dir_spring /= l_seg;
+
+        if (i==points_number-1)
+        {
+            project(internal_spring_forces, range(local_size-dimension,local_size)) -= spring_force * dir_spring;
+            project(internal_spring_forces, range(0,3)) += spring_force * dir_spring;
+        }
+        else
+        {
+            project(internal_spring_forces, range((i*3),((i+1)*3))) -= spring_force * dir_spring;
+            project(internal_spring_forces, range((i*3)+3,((i+1)*3)+3)) += spring_force * dir_spring;
+        }
+
+      }
+  }
+  return internal_spring_forces;
+}
+
 Vector BoulaudRingElement::GetInternalForces() const
 {
-  const Vector internal_forces = this->GetDirectionVectorNt() * this->CalculateNormalForce();
+  const Vector stabilisation_spring_force = this->SpringForces();
+  const Vector rope_forces = this->GetDirectionVectorNt() * this->CalculateNormalForce();
+  const Vector internal_forces = rope_forces + stabilisation_spring_force;
   return internal_forces;
 }
 
@@ -398,11 +450,79 @@ Matrix BoulaudRingElement::GeometricStiffnessMatrix() const
   return geometric_stiffness_matrix;
 }
 
+Matrix BoulaudRingElement::SpringStiffnessMatrix() const
+{
+  const int points_number = GetGeometry().PointsNumber();
+  const int segment_number = points_number;
+  const int dimension = 3;
+
+  const SizeType local_size = dimension*points_number;
+  Matrix stabilisation_stiffness_matrix = ZeroMatrix(local_size,local_size);
+
+  const Vector d_x = this->GetDeltaPositions(1);
+  const Vector d_y = this->GetDeltaPositions(2);
+  const Vector d_z = this->GetDeltaPositions(3);
+  const Vector lengths = this->GetCurrentLengthArray();
+  const double L0 = GetRefLength();
+  const double grzl = 0.01;
+  const double L0_seg = L0 * grzl;
+  const double EA = this->CalculateEA();
+
+  double l_seg = 0.0;
+  for (int i = 0; i < segment_number; ++i)
+  {
+    l_seg = lengths[i];
+    if (l_seg/L0 < grzl)
+    {
+      double w = -std::log( l_seg / L0_seg ) * EA;
+      double delta_l = l_seg - L0_seg;
+      double spring_force = w * delta_l;
+
+      Matrix sub_stiffness_matrix = ZeroMatrix(dimension,dimension);
+      sub_stiffness_matrix(0, 0) = std::pow(d_x[i],2.0);
+      sub_stiffness_matrix(0, 1) = d_x[i]*d_y[i];
+      sub_stiffness_matrix(0, 2) = d_x[i]*d_z[i];
+
+      sub_stiffness_matrix(1, 0) = sub_stiffness_matrix(0, 1);
+      sub_stiffness_matrix(1, 1) = std::pow(d_y[i],2.0);
+      sub_stiffness_matrix(1, 2) = d_y[i]*d_z[i];
+
+      sub_stiffness_matrix(2, 0) = sub_stiffness_matrix(0, 2);
+      sub_stiffness_matrix(2, 1) = sub_stiffness_matrix(1, 2);
+      sub_stiffness_matrix(2, 2) = std::pow(d_z[i],2.0);
+
+      sub_stiffness_matrix /= std::pow(l_seg,2.0);
+
+      sub_stiffness_matrix *= ( -spring_force -EA * delta_l + w * l_seg) / l_seg;
+
+      sub_stiffness_matrix(0, 0) += spring_force / l_seg ;
+      sub_stiffness_matrix(1, 1) += spring_force / l_seg ;
+      sub_stiffness_matrix(2, 2) += spring_force / l_seg ;
+
+      if (i==points_number-1)
+      {
+          project(stabilisation_stiffness_matrix, range(0,3),range(0,3)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(local_size-dimension,local_size),range(local_size-dimension,local_size)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(0,3),range(local_size-dimension,local_size)) -= sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(local_size-dimension,local_size),range(0,3)) -= sub_stiffness_matrix;
+      }
+      else
+      {
+          project(stabilisation_stiffness_matrix, range((i*3),((i+1)*3)),range((i*3),((i+1)*3))) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3)+3,((i+1)*3)+3),range((i*3)+3,((i+1)*3)+3)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3),((i+1)*3)),range((i*3)+3,((i+1)*3)+3)) -= sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3)+3,((i+1)*3)+3),range((i*3),((i+1)*3))) -= sub_stiffness_matrix;
+      }
+    }
+  }
+  return stabilisation_stiffness_matrix;
+}
 inline Matrix BoulaudRingElement::TotalStiffnessMatrix() const
 {
   const Matrix ElasticStiffnessMatrix = this->ElasticStiffnessMatrix();
   const Matrix GeometrixStiffnessMatrix = this->GeometricStiffnessMatrix();
-  return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix);
+  const Matrix StabilisationSpringStiffnessMatrix = this->SpringStiffnessMatrix();
+  return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix+StabilisationSpringStiffnessMatrix);
 }
 
 void BoulaudRingElement::CalculateLeftHandSide(

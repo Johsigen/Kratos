@@ -20,6 +20,7 @@
 
 // Project includes
 #include "includes/element.h"
+#include "includes/ublas_interface.h"
 
 namespace Kratos
 {
@@ -112,6 +113,7 @@ namespace Kratos
 
         Matrix ElasticStiffnessMatrix() const;
         Matrix GeometricStiffnessMatrix() const;
+        Matrix SpringStiffnessMatrix() const;
         inline Matrix TotalStiffnessMatrix() const;
 
         void CalculateLumpedMassVector(
@@ -160,8 +162,9 @@ namespace Kratos
         Vector GetRefLengthArray() const;
         Vector GetDeltaPositions(const int& rDirection) const;
         Vector GetDirectionVectorNt() const;
+        Vector SpringForces() const;
         Vector GetInternalForces() const;
-        double CalculateEA() const;        
+        double CalculateEA() const;
         double GetCurrentLength() const;
         double GetRefLength() const;
         double CalculateEngineeringStrain() const;
