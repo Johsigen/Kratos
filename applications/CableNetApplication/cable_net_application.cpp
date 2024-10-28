@@ -30,7 +30,7 @@
 
 namespace Kratos {
 
-    typedef Node<3> NodeType;
+    typedef Node NodeType;
 
 KratosCableNetApplication::KratosCableNetApplication():
     KratosApplication("CableNetApplication"),
