@@ -26,6 +26,8 @@
 
 #include "custom_elements/sliding_cable_element_3D.hpp"
 #include "custom_elements/ring_element_3D.hpp"
+#include "custom_elements/boulaud_ring_element.hpp"
+#include "custom_elements/volkwein_ring_element.hpp"
 #include "custom_elements/weak_coupling_slide.hpp"
 #include "custom_elements/empirical_spring.hpp"
 
@@ -184,6 +186,10 @@ private:
     const SlidingCableElement3D mSlidingCableElement3D3N;
     const RingElement3D mRingElement3D4N;
     const RingElement3D mRingElement3D3N;
+    const BoulaudRingElement mBoulaudRingElement3D3N;
+    const BoulaudRingElement mBoulaudRingElement3D4N;
+    const VolkweinRingElement mVolkweinRingElement3D3N;
+    const VolkweinRingElement mVolkweinRingElement3D4N;
     const EmpiricalSpringElement3D2N mEmpiricalSpringElement3D2N;
 
     ///@}

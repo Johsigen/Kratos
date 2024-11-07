@@ -4,16 +4,15 @@
 //   _|\_\_|  \__,_|\__|\___/ ____/
 //                   Multi-Physics
 //
-//  License:		 BSD License
-//					 Kratos default license: kratos/license.txt
+//  License:         BSD License
+//                   Kratos default license: kratos/license.txt
 //
-//  Main authors: Klaus B. Sautter
+//  Main authors: Johanna Sigeneger
 //
 //
 //
 
-#if !defined(KRATOS_RING_ELEMENT_3D_H_INCLUDED )
-#define  KRATOS_RING_ELEMENT_3D_H_INCLUDED
+#pragma once
 
 // System includes
 
@@ -21,24 +20,21 @@
 
 // Project includes
 #include "includes/element.h"
-#include "includes/define.h"
+#include "includes/ublas_interface.h"
 
 namespace Kratos
 {
     /**
-     * @class RingElement3D
-     *
-     * @brief This is a ring elemen with 3 translational dofs per node
-     *
-     * @author Klaus B Sautter
+     * @class VolkweinRingElement
+     * @author Johanna Sigeneger
      */
 
-    class KRATOS_API(CABLE_NET_APPLICATION) RingElement3D : public Element
+    class KRATOS_API(CABLE_NET_APPLICATION) VolkweinRingElement : public Element
     {
     protected:
 
     public:
-        KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(RingElement3D);
+        KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(VolkweinRingElement);
 
 
         typedef Element BaseType;
@@ -53,15 +49,15 @@ namespace Kratos
         typedef BaseType::DofsVectorType DofsVectorType;
 
 
-        RingElement3D() {};
-        RingElement3D(IndexType NewId,
-                        GeometryType::Pointer pGeometry);
-        RingElement3D(IndexType NewId,
+        VolkweinRingElement() {};
+        VolkweinRingElement(IndexType NewId,
+                            GeometryType::Pointer pGeometry);
+        VolkweinRingElement(IndexType NewId,
                         GeometryType::Pointer pGeometry,
                         PropertiesType::Pointer pProperties);
 
 
-        ~RingElement3D() override;
+        ~VolkweinRingElement() override;
 
     /**
      * @brief Creates a new element
@@ -114,12 +110,8 @@ namespace Kratos
 
         Matrix ElasticStiffnessMatrix() const;
         Matrix GeometricStiffnessMatrix() const;
+        Matrix SpringStiffnessMatrix() const;
         inline Matrix TotalStiffnessMatrix() const;
-
-        double GetCurrentLength() const;
-        double GetRefLength() const;
-        double CalculateGreenLagrangeStrain() const;
-        double LinearStiffness() const;
 
         void CalculateLumpedMassVector(
             VectorType &rLumpedMassVector,
@@ -158,7 +150,7 @@ namespace Kratos
          * @brief This function calculates self-weight forces
          */
         Vector CalculateBodyForces();
-        
+
         void FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo) override;
 
     private:
@@ -167,7 +159,13 @@ namespace Kratos
         Vector GetRefLengthArray() const;
         Vector GetDeltaPositions(const int& rDirection) const;
         Vector GetDirectionVectorNt() const;
+        Vector SpringForces() const;
         Vector GetInternalForces() const;
+        double CalculateEA() const;
+        double GetCurrentLength() const;
+        double GetRefLength() const;
+        double CalculateEngineeringStrain() const;
+        double CalculateNormalForce() const;
 
         friend class Serializer;
         void save(Serializer& rSerializer) const override;
@@ -177,5 +175,3 @@ namespace Kratos
 
 }
 
-
-#endif

@@ -5,9 +5,9 @@
 //                   Multi-Physics
 //
 //  License:     BSD License
-//           license: structural_mechanics_application/license.txt
+//               license: structural_mechanics_application/license.txt
 //
-//  Main authors: Klaus B. Sautter
+//  Main authors: Johanna Sigeneger
 //
 //
 //
@@ -17,8 +17,9 @@
 // External includes
 
 // Project includes
-#include "custom_elements/ring_element_3D.hpp"
+#include "custom_elements/volkwein_ring_element.hpp"
 #include "includes/define.h"
+#include "includes/ublas_interface.h"
 #include "structural_mechanics_application_variables.h"
 #include "includes/checks.h"
 #include "utilities/atomic_utilities.h"
@@ -26,33 +27,33 @@
 
 
 namespace Kratos {
-RingElement3D::RingElement3D(IndexType NewId,
+VolkweinRingElement::VolkweinRingElement(IndexType NewId,
                                    GeometryType::Pointer pGeometry)
     : Element(NewId, pGeometry) {}
 
-RingElement3D::RingElement3D(IndexType NewId,
+VolkweinRingElement::VolkweinRingElement(IndexType NewId,
                                    GeometryType::Pointer pGeometry,
                                    PropertiesType::Pointer pProperties)
     : Element(NewId, pGeometry, pProperties) {}
 
 Element::Pointer
-RingElement3D::Create(IndexType NewId, NodesArrayType const &rThisNodes,
+VolkweinRingElement::Create(IndexType NewId, NodesArrayType const &rThisNodes,
                          PropertiesType::Pointer pProperties) const {
   const GeometryType &rGeom = this->GetGeometry();
-  return Kratos::make_intrusive<RingElement3D>(NewId, rGeom.Create(rThisNodes),
+  return Kratos::make_intrusive<VolkweinRingElement>(NewId, rGeom.Create(rThisNodes),
                                                pProperties);
 }
 
 Element::Pointer
-RingElement3D::Create(IndexType NewId, GeometryType::Pointer pGeom,
+VolkweinRingElement::Create(IndexType NewId, GeometryType::Pointer pGeom,
                          PropertiesType::Pointer pProperties) const {
-  return Kratos::make_intrusive<RingElement3D>(NewId, pGeom,
+  return Kratos::make_intrusive<VolkweinRingElement>(NewId, pGeom,
                                                pProperties);
 }
 
-RingElement3D::~RingElement3D() {}
+VolkweinRingElement::~VolkweinRingElement() {}
 
-void RingElement3D::EquationIdVector(EquationIdVectorType &rResult,
+void VolkweinRingElement::EquationIdVector(EquationIdVectorType &rResult,
                                      const ProcessInfo &rCurrentProcessInfo) const {
 
   const int points_number = GetGeometry().PointsNumber();
@@ -72,7 +73,7 @@ void RingElement3D::EquationIdVector(EquationIdVectorType &rResult,
         this->GetGeometry()[i].GetDof(DISPLACEMENT_Z).EquationId();
   }
 }
-void RingElement3D::GetDofList(DofsVectorType &rElementalDofList,
+void VolkweinRingElement::GetDofList(DofsVectorType &rElementalDofList,
                                const ProcessInfo &rCurrentProcessInfo) const {
 
   const int points_number = GetGeometry().PointsNumber();
@@ -95,7 +96,7 @@ void RingElement3D::GetDofList(DofsVectorType &rElementalDofList,
 }
 
 
-void RingElement3D::GetValuesVector(Vector &rValues, int Step) const {
+void VolkweinRingElement::GetValuesVector(Vector &rValues, int Step) const {
 
   KRATOS_TRY;
   const int points_number = GetGeometry().PointsNumber();
@@ -117,7 +118,7 @@ void RingElement3D::GetValuesVector(Vector &rValues, int Step) const {
   KRATOS_CATCH("")
 }
 
-void RingElement3D::GetFirstDerivativesVector(Vector &rValues, int Step) const {
+void VolkweinRingElement::GetFirstDerivativesVector(Vector &rValues, int Step) const {
 
   KRATOS_TRY;
   const int points_number = GetGeometry().PointsNumber();
@@ -139,7 +140,7 @@ void RingElement3D::GetFirstDerivativesVector(Vector &rValues, int Step) const {
   KRATOS_CATCH("")
 }
 
-void RingElement3D::GetSecondDerivativesVector(Vector &rValues, int Step) const {
+void VolkweinRingElement::GetSecondDerivativesVector(Vector &rValues, int Step) const {
 
   KRATOS_TRY;
   const int points_number = GetGeometry().PointsNumber();
@@ -162,7 +163,7 @@ void RingElement3D::GetSecondDerivativesVector(Vector &rValues, int Step) const 
   KRATOS_CATCH("")
 }
 
-Vector RingElement3D::GetCurrentLengthArray() const
+Vector VolkweinRingElement::GetCurrentLengthArray() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
@@ -191,10 +192,11 @@ Vector RingElement3D::GetCurrentLengthArray() const
   return segment_lengths;
 }
 
-Vector RingElement3D::GetRefLengthArray() const
+Vector VolkweinRingElement::GetRefLengthArray() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
+  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
 
   Vector segment_lengths = ZeroVector(number_of_segments);
   for (int i=0;i<number_of_segments;++i)
@@ -207,10 +209,11 @@ Vector RingElement3D::GetRefLengthArray() const
     const double dz = this->GetGeometry()[next_node_id].Z0() - this->GetGeometry()[i].Z0();
     segment_lengths[i] = std::sqrt((dx * dx) + (dy * dy) + (dz * dz));
   }
+  segment_lengths /= (prestress / CalculateEA() + 1);
   return segment_lengths;
 }
 
-double RingElement3D::GetCurrentLength() const
+double VolkweinRingElement::GetCurrentLength() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
@@ -220,17 +223,18 @@ double RingElement3D::GetCurrentLength() const
   return length;
 }
 
-double RingElement3D::GetRefLength() const
+double VolkweinRingElement::GetRefLength() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
   Vector segment_lengths = this->GetRefLengthArray();
   double length = 0.0;
-  for (int i=0;i<number_of_segments;++i) length += segment_lengths[i];
+  for (int i = 0; i < number_of_segments; ++i)
+    length += segment_lengths[i];
   return length;
 }
 
-Vector RingElement3D::GetDeltaPositions(const int& rDirection) const
+Vector VolkweinRingElement::GetDeltaPositions(const int& rDirection) const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
@@ -277,14 +281,14 @@ Vector RingElement3D::GetDeltaPositions(const int& rDirection) const
   return delta_position;
 }
 
-double RingElement3D::CalculateGreenLagrangeStrain() const
+double VolkweinRingElement::CalculateEngineeringStrain() const
 {
   const double reference_length = this->GetRefLength();
   const double current_length = this->GetCurrentLength();
-  return (0.50 * (((current_length*current_length)-(reference_length*reference_length)) / (reference_length*reference_length)));
+  return ((current_length-reference_length) / reference_length);
 }
 
-Vector RingElement3D::GetDirectionVectorNt() const
+Vector VolkweinRingElement::GetDirectionVectorNt() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int dimension = 3;
@@ -320,44 +324,84 @@ Vector RingElement3D::GetDirectionVectorNt() const
   return n_t;
 }
 
-Vector RingElement3D::GetInternalForces() const
+Vector VolkweinRingElement::SpringForces() const
 {
-  const double k_0            = this->LinearStiffness();
-  const double strain_gl      = this->CalculateGreenLagrangeStrain();
-  const double current_length = this->GetCurrentLength();
+  const int points_number = GetGeometry().PointsNumber();
+  const int segment_number = points_number;
+  const int dimension = 3;
 
-  const double total_internal_force = k_0 * strain_gl * current_length;
-  const Vector internal_foces = this->GetDirectionVectorNt() * total_internal_force;
-  return internal_foces;
+  const SizeType local_size = dimension*points_number;
+  Vector internal_spring_forces = ZeroVector(local_size);
+
+  const Vector d_x = this->GetDeltaPositions(1);
+  const Vector d_y = this->GetDeltaPositions(2);
+  const Vector d_z = this->GetDeltaPositions(3);
+  const Vector lengths = this->GetCurrentLengthArray();
+  double L0 = GetRefLength();
+  const double grzl = 0.01;
+  const double L0_seg = L0 * grzl;
+  const double EA = this->CalculateEA();
+
+  double l_seg = 0.0;
+  for (int i = 0; i < segment_number; ++i)
+  {
+      l_seg = lengths[i];
+      if (l_seg/L0 < grzl)
+      {
+        double w = -std::log( l_seg / L0_seg ) * EA;
+        double delta_l = l_seg - L0_seg;
+        double spring_force = w * delta_l;
+
+        Vector dir_spring = ZeroVector(dimension);
+        dir_spring[0] = d_x[i];
+        dir_spring[1] = d_y[i];
+        dir_spring[2] = d_z[i];
+        dir_spring /= l_seg;
+
+        if (i==points_number-1)
+        {
+            project(internal_spring_forces, range(local_size-dimension,local_size)) -= spring_force * dir_spring;
+            project(internal_spring_forces, range(0,3)) += spring_force * dir_spring;
+        }
+        else
+        {
+            project(internal_spring_forces, range((i*3),((i+1)*3))) -= spring_force * dir_spring;
+            project(internal_spring_forces, range((i*3)+3,((i+1)*3)+3)) += spring_force * dir_spring;
+        }
+
+      }
+  }
+  return internal_spring_forces;
 }
 
-Matrix RingElement3D::ElasticStiffnessMatrix() const
+Vector VolkweinRingElement::GetInternalForces() const
+{
+  const Vector stabilisation_spring_force = this->SpringForces();
+  const Vector rope_forces = this->GetDirectionVectorNt() * this->CalculateNormalForce();
+  const Vector internal_forces = rope_forces + stabilisation_spring_force;
+  return internal_forces;
+}
+
+Matrix VolkweinRingElement::ElasticStiffnessMatrix() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int dimension = 3;
   const SizeType local_size = dimension*points_number;
-  double prestress = 0.00;
-    if (this->GetProperties().Has(TRUSS_PRESTRESS_PK2)) {
-        prestress = this->GetProperties()[TRUSS_PRESTRESS_PK2];
-    }
+
   Matrix elastic_stiffness_matrix = ZeroMatrix(local_size,local_size);
   const Vector direction_vector = this->GetDirectionVectorNt();
   elastic_stiffness_matrix = outer_prod(direction_vector,direction_vector);
-  elastic_stiffness_matrix *= this->LinearStiffness();
-  elastic_stiffness_matrix *= (1.0 + (3.0*this->CalculateGreenLagrangeStrain()));
-  Matrix stabimat = IdentityMatrix(local_size,local_size)*prestress;
-  return elastic_stiffness_matrix+stabimat;
+
+  elastic_stiffness_matrix *= this->CalculateEA() / this->GetRefLength();
+
+  return elastic_stiffness_matrix;
 }
 
-Matrix RingElement3D::GeometricStiffnessMatrix() const
+Matrix VolkweinRingElement::GeometricStiffnessMatrix() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int dimension = 3;
   const SizeType local_size = dimension*points_number;
-
-  const double k_0            = this->LinearStiffness();
-  const double strain_gl      = this->CalculateGreenLagrangeStrain();
-  const double current_length = this->GetCurrentLength();
 
   const Vector d_x = this->GetDeltaPositions(1);
   const Vector d_y = this->GetDeltaPositions(2);
@@ -368,7 +412,6 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
 
   for (int i=0;i<points_number;++i)
   {
-    const double current_length = lengths[i];
     Matrix sub_stiffness_matrix = ZeroMatrix(dimension,dimension);
     sub_stiffness_matrix(0, 0) = -std::pow(d_x[i],2.0)+std::pow(lengths[i],2.0);
     sub_stiffness_matrix(0, 1) = -d_x[i]*d_y[i];
@@ -382,7 +425,7 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
     sub_stiffness_matrix(2, 1) = sub_stiffness_matrix(1, 2);
     sub_stiffness_matrix(2, 2) = -std::pow(d_z[i],2.0)+std::pow(lengths[i],2.0);
 
-    sub_stiffness_matrix /= std::pow(current_length,3.0);
+    sub_stiffness_matrix /= std::pow(lengths[i],3.0);
 
 
     if (i==points_number-1)
@@ -403,19 +446,87 @@ Matrix RingElement3D::GeometricStiffnessMatrix() const
     }
   }
 
-  geometric_stiffness_matrix *= k_0 * strain_gl * current_length;
+  geometric_stiffness_matrix *= this->CalculateEA() * this->CalculateEngineeringStrain();
 
   return geometric_stiffness_matrix;
 }
 
-inline Matrix RingElement3D::TotalStiffnessMatrix() const
+Matrix VolkweinRingElement::SpringStiffnessMatrix() const
+{
+  const int points_number = GetGeometry().PointsNumber();
+  const int segment_number = points_number;
+  const int dimension = 3;
+
+  const SizeType local_size = dimension*points_number;
+  Matrix stabilisation_stiffness_matrix = ZeroMatrix(local_size,local_size);
+
+  const Vector d_x = this->GetDeltaPositions(1);
+  const Vector d_y = this->GetDeltaPositions(2);
+  const Vector d_z = this->GetDeltaPositions(3);
+  const Vector lengths = this->GetCurrentLengthArray();
+  const double L0 = GetRefLength();
+  const double grzl = 0.01;
+  const double L0_seg = L0 * grzl;
+  const double EA = this->CalculateEA();
+
+  double l_seg = 0.0;
+  for (int i = 0; i < segment_number; ++i)
+  {
+    l_seg = lengths[i];
+    if (l_seg/L0 < grzl)
+    {
+      double w = -std::log( l_seg / L0_seg ) * EA;
+      double delta_l = l_seg - L0_seg;
+      double spring_force = w * delta_l;
+
+      Matrix sub_stiffness_matrix = ZeroMatrix(dimension,dimension);
+      sub_stiffness_matrix(0, 0) = std::pow(d_x[i],2.0);
+      sub_stiffness_matrix(0, 1) = d_x[i]*d_y[i];
+      sub_stiffness_matrix(0, 2) = d_x[i]*d_z[i];
+
+      sub_stiffness_matrix(1, 0) = sub_stiffness_matrix(0, 1);
+      sub_stiffness_matrix(1, 1) = std::pow(d_y[i],2.0);
+      sub_stiffness_matrix(1, 2) = d_y[i]*d_z[i];
+
+      sub_stiffness_matrix(2, 0) = sub_stiffness_matrix(0, 2);
+      sub_stiffness_matrix(2, 1) = sub_stiffness_matrix(1, 2);
+      sub_stiffness_matrix(2, 2) = std::pow(d_z[i],2.0);
+
+      sub_stiffness_matrix /= std::pow(l_seg,2.0);
+
+      sub_stiffness_matrix *= ( -spring_force -EA * delta_l + w * l_seg) / l_seg;
+
+      sub_stiffness_matrix(0, 0) += spring_force / l_seg ;
+      sub_stiffness_matrix(1, 1) += spring_force / l_seg ;
+      sub_stiffness_matrix(2, 2) += spring_force / l_seg ;
+
+      if (i==points_number-1)
+      {
+          project(stabilisation_stiffness_matrix, range(0,3),range(0,3)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(local_size-dimension,local_size),range(local_size-dimension,local_size)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(0,3),range(local_size-dimension,local_size)) -= sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range(local_size-dimension,local_size),range(0,3)) -= sub_stiffness_matrix;
+      }
+      else
+      {
+          project(stabilisation_stiffness_matrix, range((i*3),((i+1)*3)),range((i*3),((i+1)*3))) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3)+3,((i+1)*3)+3),range((i*3)+3,((i+1)*3)+3)) += sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3),((i+1)*3)),range((i*3)+3,((i+1)*3)+3)) -= sub_stiffness_matrix;
+          project(stabilisation_stiffness_matrix, range((i*3)+3,((i+1)*3)+3),range((i*3),((i+1)*3))) -= sub_stiffness_matrix;
+      }
+    }
+  }
+  return stabilisation_stiffness_matrix;
+}
+inline Matrix VolkweinRingElement::TotalStiffnessMatrix() const
 {
   const Matrix ElasticStiffnessMatrix = this->ElasticStiffnessMatrix();
   const Matrix GeometrixStiffnessMatrix = this->GeometricStiffnessMatrix();
-  return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix);
+  const Matrix StabilisationSpringStiffnessMatrix = this->SpringStiffnessMatrix();
+  return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix+StabilisationSpringStiffnessMatrix);
 }
 
-void RingElement3D::CalculateLeftHandSide(
+void VolkweinRingElement::CalculateLeftHandSide(
             MatrixType& rLeftHandSideMatrix,
             const ProcessInfo& rCurrentProcessInfo)
 {
@@ -431,7 +542,7 @@ void RingElement3D::CalculateLeftHandSide(
   KRATOS_CATCH("")
 }
 
-void RingElement3D::CalculateRightHandSide(
+void VolkweinRingElement::CalculateRightHandSide(
     VectorType &rRightHandSideVector, const ProcessInfo &rCurrentProcessInfo)
 {
   KRATOS_TRY;
@@ -445,7 +556,7 @@ void RingElement3D::CalculateRightHandSide(
   KRATOS_CATCH("")
 }
 
-void RingElement3D::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
+void VolkweinRingElement::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
                                          VectorType &rRightHandSideVector,
                                          const ProcessInfo &rCurrentProcessInfo)
 {
@@ -464,7 +575,7 @@ void RingElement3D::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
   KRATOS_CATCH("")
 }
 
-void RingElement3D::CalculateLumpedMassVector(
+void VolkweinRingElement::CalculateLumpedMassVector(
     VectorType &rLumpedMassVector,
     const ProcessInfo& rCurrentProcessInfo) const
 {
@@ -500,7 +611,7 @@ void RingElement3D::CalculateLumpedMassVector(
     KRATOS_CATCH("")
 }
 
-void RingElement3D::CalculateMassMatrix(
+void VolkweinRingElement::CalculateMassMatrix(
     MatrixType &rMassMatrix,
     const ProcessInfo &rCurrentProcessInfo)
 {
@@ -525,7 +636,7 @@ void RingElement3D::CalculateMassMatrix(
     KRATOS_CATCH("")
 }
 
-void RingElement3D::CalculateDampingMatrix(
+void VolkweinRingElement::CalculateDampingMatrix(
     MatrixType &rDampingMatrix, const ProcessInfo &rCurrentProcessInfo) {
 
   KRATOS_TRY;
@@ -561,7 +672,7 @@ void RingElement3D::CalculateDampingMatrix(
   KRATOS_CATCH("")
 }
 
-void RingElement3D::AddExplicitContribution(
+void VolkweinRingElement::AddExplicitContribution(
     const VectorType& rRHSVector,
     const Variable<VectorType>& rRHSVariable,
     const Variable<double >& rDestinationVariable,
@@ -589,7 +700,7 @@ void RingElement3D::AddExplicitContribution(
     KRATOS_CATCH("")
 }
 
-void RingElement3D::AddExplicitContribution(
+void VolkweinRingElement::AddExplicitContribution(
     const VectorType &rRHSVector, const Variable<VectorType> &rRHSVariable,
     const Variable<array_1d<double, 3>> &rDestinationVariable,
     const ProcessInfo &rCurrentProcessInfo
@@ -634,7 +745,7 @@ void RingElement3D::AddExplicitContribution(
     KRATOS_CATCH("")
 }
 
-int RingElement3D::Check(const ProcessInfo& rCurrentProcessInfo) const
+int VolkweinRingElement::Check(const ProcessInfo& rCurrentProcessInfo) const
 {
     KRATOS_TRY
 
@@ -651,7 +762,7 @@ int RingElement3D::Check(const ProcessInfo& rCurrentProcessInfo) const
     KRATOS_CATCH("")
 }
 
-bool RingElement3D::HasSelfWeight() const
+bool VolkweinRingElement::HasSelfWeight() const
 {
     const double norm_self_weight =
     this->GetGeometry()[0].FastGetSolutionStepValue(VOLUME_ACCELERATION)[0]*
@@ -665,7 +776,7 @@ bool RingElement3D::HasSelfWeight() const
     else return true;
 }
 
-Vector RingElement3D::CalculateBodyForces() {
+Vector VolkweinRingElement::CalculateBodyForces() {
 
     const int points_number = GetGeometry().PointsNumber();
     const int dimension = 3;
@@ -704,21 +815,24 @@ Vector RingElement3D::CalculateBodyForces() {
     return body_forces_global;
 }
 
-double RingElement3D::LinearStiffness() const
+double VolkweinRingElement::CalculateEA() const
 {
-    return (this->GetProperties()[CROSS_AREA] * this->GetProperties()[YOUNG_MODULUS] / this->GetRefLength());
+    return this->GetProperties()[CROSS_AREA] * this->GetProperties()[YOUNG_MODULUS];
+}
+double VolkweinRingElement::CalculateNormalForce() const
+{
+    return this->CalculateEA() * this-> CalculateEngineeringStrain();
 }
 
-void RingElement3D::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
+void VolkweinRingElement::FinalizeSolutionStep(const ProcessInfo& rCurrentProcessInfo)
 {
-  const double total_internal_force = this-> LinearStiffness() * this-> CalculateGreenLagrangeStrain() * this->GetCurrentLength();
-  this->SetValue(NORMALFORCE, total_internal_force);
+  this->SetValue(NORMALFORCE, CalculateNormalForce());
 }
 
-void RingElement3D::save(Serializer &rSerializer) const {
+void VolkweinRingElement::save(Serializer &rSerializer) const {
   KRATOS_SERIALIZE_SAVE_BASE_CLASS(rSerializer, Element);
 }
-void RingElement3D::load(Serializer &rSerializer) {
+void VolkweinRingElement::load(Serializer &rSerializer) {
   KRATOS_SERIALIZE_LOAD_BASE_CLASS(rSerializer, Element);
 }
 } // namespace Kratos.
