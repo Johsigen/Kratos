@@ -163,6 +163,17 @@ void VolkweinRingElement::GetSecondDerivativesVector(Vector &rValues, int Step) 
   KRATOS_CATCH("")
 }
 
+Vector VolkweinRingElement::GetCurrentDiagonalLengthArray() const
+{
+    Vector diagonal_lengths = ZeroVector(2);
+    const Vector d_x = this->GetDeltaPositions(1);
+    const Vector d_y = this->GetDeltaPositions(2);
+    const Vector d_z = this->GetDeltaPositions(3);
+    diagonal_lengths[1] = std::sqrt(d_x[1]*d_x[1] + d_y[1]*d_y[1] + d_z[1]*d_z[1]);
+    diagonal_lengths[2] = std::sqrt(d_x[2]*d_x[2] + d_y[2]*d_y[2] + d_z[2]*d_z[2]);
+    return diagonal_lengths;
+}
+
 Vector VolkweinRingElement::GetCurrentLengthArray() const
 {
   const int points_number = GetGeometry().PointsNumber();
@@ -232,6 +243,53 @@ double VolkweinRingElement::GetRefLength() const
   for (int i = 0; i < number_of_segments; ++i)
     length += segment_lengths[i];
   return length;
+}
+
+Vector VolkweinRingElement::GetDeltaDiagonalPositions(const int& rDirection) const
+{
+  Vector delta_position = ZeroVector(2);
+
+  double d_disp = 0.0;
+  double d_ref_pos = 0.0;
+  int next_node_id = 3;
+  for (int i=0;i<2;++i)
+  {
+    if (i==1) {
+        next_node_id = 4;
+    }
+    else {
+        KRATOS_ERROR << "maximum 2 diagonals" << std::endl;
+    }
+
+    if (rDirection==1)
+    {
+      d_disp =
+        this->GetGeometry()[next_node_id].FastGetSolutionStepValue(DISPLACEMENT_X) -
+        this->GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT_X);
+      d_ref_pos = this->GetGeometry()[next_node_id].X0() - this->GetGeometry()[i].X0();
+    }
+
+    else if (rDirection==2)
+    {
+      d_disp=
+        this->GetGeometry()[next_node_id].FastGetSolutionStepValue(DISPLACEMENT_Y) -
+        this->GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT_Y);
+      d_ref_pos = this->GetGeometry()[next_node_id].Y0() - this->GetGeometry()[i].Y0();
+    }
+
+    else if (rDirection==3)
+    {
+      d_disp =
+        this->GetGeometry()[next_node_id].FastGetSolutionStepValue(DISPLACEMENT_Z) -
+        this->GetGeometry()[i].FastGetSolutionStepValue(DISPLACEMENT_Z);
+      d_ref_pos = this->GetGeometry()[next_node_id].Z0() - this->GetGeometry()[i].Z0();
+    }
+
+    else KRATOS_ERROR << "maximum 3 dimensions" << std::endl;
+
+    delta_position[i] = d_disp+d_ref_pos;
+  }
+  return delta_position;
 }
 
 Vector VolkweinRingElement::GetDeltaPositions(const int& rDirection) const
@@ -520,10 +578,15 @@ Matrix VolkweinRingElement::SpringStiffnessMatrix() const
 }
 inline Matrix VolkweinRingElement::TotalStiffnessMatrix() const
 {
+  double d1 = this->GetCurrentDiagonalLengthArray()[1];
+  KRATOS_WATCH(d1)
   const Matrix ElasticStiffnessMatrix = this->ElasticStiffnessMatrix();
-  const Matrix GeometrixStiffnessMatrix = this->GeometricStiffnessMatrix();
+  const Matrix GeometricStiffnessMatrix = this->GeometricStiffnessMatrix();
   const Matrix StabilisationSpringStiffnessMatrix = this->SpringStiffnessMatrix();
-  return (ElasticStiffnessMatrix+GeometrixStiffnessMatrix+StabilisationSpringStiffnessMatrix);
+
+  const Matrix TotalStiffnessMatrix = ElasticStiffnessMatrix+GeometricStiffnessMatrix+StabilisationSpringStiffnessMatrix;
+
+  return (TotalStiffnessMatrix);
 }
 
 void VolkweinRingElement::CalculateLeftHandSide(

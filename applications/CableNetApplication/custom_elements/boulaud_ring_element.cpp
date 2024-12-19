@@ -191,11 +191,10 @@ Vector BoulaudRingElement::GetCurrentLengthArray() const
   return segment_lengths;
 }
 
-Vector BoulaudRingElement::GetRefLengthArray() const
+Vector BoulaudRingElement::GetInitialLengthArray() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
-  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
 
   Vector segment_lengths = ZeroVector(number_of_segments);
   for (int i=0;i<number_of_segments;++i)
@@ -208,6 +207,17 @@ Vector BoulaudRingElement::GetRefLengthArray() const
     const double dz = this->GetGeometry()[next_node_id].Z0() - this->GetGeometry()[i].Z0();
     segment_lengths[i] = std::sqrt((dx * dx) + (dy * dy) + (dz * dz));
   }
+  //double length = 0.0;
+  //for (int i = 0; i < number_of_segments; ++i)
+  //  length += segment_lengths[i];
+  //std::cout << std::setprecision(16) << std::scientific << length << "\n";
+  return segment_lengths;
+}
+
+Vector BoulaudRingElement::GetRefLengthArray() const
+{
+  Vector segment_lengths = this->GetInitialLengthArray();
+  const double prestress = this->GetProperties().Has(TRUSS_PRESTRESS_PK2) ? this->GetProperties()[TRUSS_PRESTRESS_PK2] : 0.0;
   segment_lengths /= (prestress / CalculateEA() + 1);
   return segment_lengths;
 }
@@ -226,10 +236,19 @@ double BoulaudRingElement::GetRefLength() const
 {
   const int points_number = GetGeometry().PointsNumber();
   const int number_of_segments = points_number;
+
   Vector segment_lengths = this->GetRefLengthArray();
   double length = 0.0;
   for (int i = 0; i < number_of_segments; ++i)
     length += segment_lengths[i];
+
+  if (this->GetProperties().Has(RAYLEIGH_ALPHA))
+  {
+    const double lv = this->GetProperties()[RAYLEIGH_ALPHA];
+    length = lv;
+    //std::cout << std::setprecision(16) << std::scientific << length << "\n";
+  }
+
   return length;
 }
 

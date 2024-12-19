@@ -155,8 +155,10 @@ namespace Kratos
 
     private:
 
+        Vector GetCurrentDiagonalLengthArray() const;
         Vector GetCurrentLengthArray() const;
         Vector GetRefLengthArray() const;
+        Vector GetDeltaDiagonalPositions(const int& rDirection) const;
         Vector GetDeltaPositions(const int& rDirection) const;
         Vector GetDirectionVectorNt() const;
         Vector SpringForces() const;

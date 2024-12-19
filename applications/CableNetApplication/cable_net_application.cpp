@@ -42,7 +42,8 @@ KratosCableNetApplication::KratosCableNetApplication():
     mBoulaudRingElement3D4N(0, Element::GeometryType::Pointer(new Quadrilateral3D4<NodeType>(Element::GeometryType::PointsArrayType(4)))),
     mVolkweinRingElement3D3N(0, Element::GeometryType::Pointer(new Triangle3D3<NodeType>(Element::GeometryType::PointsArrayType(3)))),
     mVolkweinRingElement3D4N(0, Element::GeometryType::Pointer(new Quadrilateral3D4<NodeType>(Element::GeometryType::PointsArrayType(4)))),
-    mEmpiricalSpringElement3D2N(0, Element::GeometryType::Pointer(new Line3D2<NodeType >(Element::GeometryType::PointsArrayType(2))))
+    mEmpiricalSpringElement3D2N(0, Element::GeometryType::Pointer(new Line3D2<NodeType >(Element::GeometryType::PointsArrayType(2)))),
+    mCoverElement3D3N(0, Element::GeometryType::Pointer(new Triangle3D3<NodeType>(Element::GeometryType::PointsArrayType(3))))
     {}
 
 void KratosCableNetApplication::Register()
@@ -65,8 +66,12 @@ void KratosCableNetApplication::Register()
     KRATOS_REGISTER_ELEMENT("VolkweinRingElement3D4N", mVolkweinRingElement3D4N)
     KRATOS_REGISTER_ELEMENT("VolkweinRingElement3D3N", mVolkweinRingElement3D3N)
     KRATOS_REGISTER_ELEMENT("EmpiricalSpringElement3D2N", mEmpiricalSpringElement3D2N)
+    KRATOS_REGISTER_ELEMENT("CoverElement3D3N", mCoverElement3D3N)
 
     KRATOS_REGISTER_VARIABLE(SPRING_DEFORMATION_EMPIRICAL_POLYNOMIAL)
     KRATOS_REGISTER_VARIABLE(NORMALFORCE)
+    KRATOS_REGISTER_VARIABLE(BENDING_STIFFNESS)
+    KRATOS_REGISTER_VARIABLE(MINIMAL_LENGTH)
+    KRATOS_REGISTER_VARIABLE(MINIMAL_CIRCUMFERENCE)
 }
 }  // namespace Kratos.

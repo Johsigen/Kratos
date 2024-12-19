@@ -30,6 +30,7 @@
 #include "custom_elements/volkwein_ring_element.hpp"
 #include "custom_elements/weak_coupling_slide.hpp"
 #include "custom_elements/empirical_spring.hpp"
+#include "custom_elements/cover_element_3D3N.hpp"
 
 
 namespace Kratos {
@@ -191,6 +192,7 @@ private:
     const VolkweinRingElement mVolkweinRingElement3D3N;
     const VolkweinRingElement mVolkweinRingElement3D4N;
     const EmpiricalSpringElement3D2N mEmpiricalSpringElement3D2N;
+    const CoverElement3D3N mCoverElement3D3N;
 
     ///@}
     ///@name Private Operators

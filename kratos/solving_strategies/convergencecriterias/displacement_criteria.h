@@ -493,6 +493,7 @@ private:
         });
 
         rDofNum = static_cast<SizeType>(r_data_communicator.SumAll(dof_num));
+        KRATOS_WATCH(std::sqrt(final_correction_norm))
         return std::sqrt(r_data_communicator.SumAll(final_correction_norm));
     }
 
