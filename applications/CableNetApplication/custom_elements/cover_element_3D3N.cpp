@@ -54,15 +54,13 @@ void CoverElement3D3N::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
                                          const ProcessInfo &rCurrentProcessInfo)
 {
     KRATOS_TRY;
-    //GetNormal();
-    //KRATOS_WATCH(this->Id());
-  const int points_number = GetGeometry().PointsNumber();
-  const int dimension = 3;
-  const SizeType local_size = dimension*points_number;
+    const int points_number = GetGeometry().PointsNumber();
+    const int dimension = 3;
+    const SizeType local_size = dimension*points_number;
 
-  rLeftHandSideMatrix = ZeroMatrix(local_size, local_size);
-  rRightHandSideVector = ZeroVector(local_size);
-  KRATOS_CATCH("")
+    rLeftHandSideMatrix = ZeroMatrix(local_size, local_size);
+    rRightHandSideVector = ZeroVector(local_size);
+    KRATOS_CATCH("")
 }
 
 array_1d<double,3> CoverElement3D3N::GetNormal() const
