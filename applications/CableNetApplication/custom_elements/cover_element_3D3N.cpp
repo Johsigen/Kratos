@@ -47,7 +47,56 @@ CoverElement3D3N::Create(IndexType NewId, GeometryType::Pointer pGeom,
                                                pProperties);
 }
 
-CoverElement3D3N::~CoverElement3D3N() {}
+
+    void CoverElement3D3N::EquationIdVector(EquationIdVectorType &rResult,
+                          const ProcessInfo &rCurrentProcessInfo) const
+    {
+        const auto point_count = GetGeometry().PointsNumber();
+        constexpr int dimension = 3;
+        const auto local_size = point_count * dimension;
+        rResult.resize(local_size);
+
+        for (unsigned i_node=0u; i_node<point_count; ++i_node) {
+            const auto i_dof = i_node * dimension;
+            const auto& r_geometry = this->GetGeometry();
+            rResult[i_dof] = r_geometry[i_node].GetDof(DISPLACEMENT_X).EquationId();
+            rResult[i_dof + 1] = r_geometry[i_node].GetDof(DISPLACEMENT_Y).EquationId();
+            rResult[i_dof + 2] = r_geometry[i_node].GetDof(DISPLACEMENT_Z).EquationId();
+        }
+    }
+
+    void CoverElement3D3N::GetDofList(DofsVectorType& rDofList,
+                    const ProcessInfo& rProcessInfo) const 
+    {
+        const auto point_count = GetGeometry().PointsNumber();
+        constexpr int dimension = 3;
+        const auto local_size = point_count * dimension;
+        rDofList.resize(local_size);
+
+        for (unsigned i_node=0u; i_node<point_count; ++i_node) {
+            const auto i_dof = i_node * dimension;
+            const auto& r_geometry = this->GetGeometry();
+            rDofList[i_dof] = r_geometry[i_node].pGetDof(DISPLACEMENT_X);
+            rDofList[i_dof + 1] = r_geometry[i_node].pGetDof(DISPLACEMENT_Y);
+            rDofList[i_dof + 2] = r_geometry[i_node].pGetDof(DISPLACEMENT_Z);
+        }
+    }
+
+    void CoverElement3D3N::GetValuesVector(Vector& rValues, int Step) const
+    {
+        const auto point_count = GetGeometry().PointsNumber();
+        constexpr int dimension = 3;
+        const auto local_size = point_count * dimension;
+        rValues.resize(local_size);
+
+        for (unsigned i_node=0u; i_node<point_count; ++i_node) {
+            const auto i_dof = i_node * dimension;
+            const auto& r_geometry = this->GetGeometry();
+            rValues[i_dof] = r_geometry[i_node].FastGetSolutionStepValue(DISPLACEMENT_X, Step);
+            rValues[i_dof + 1] = r_geometry[i_node].FastGetSolutionStepValue(DISPLACEMENT_Y, Step);
+            rValues[i_dof + 2] = r_geometry[i_node].FastGetSolutionStepValue(DISPLACEMENT_Z, Step);
+        }
+    }
 
 void CoverElement3D3N::CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
                                          VectorType &rRightHandSideVector,

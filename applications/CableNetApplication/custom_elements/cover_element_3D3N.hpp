@@ -87,9 +87,18 @@ namespace Kratos
         PropertiesType::Pointer pProperties
         ) const override;
 
-        void CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
-            VectorType &rRightHandSideVector,
-            const ProcessInfo &rCurrentProcessInfo) override;
+    void EquationIdVector(EquationIdVectorType &rResult,
+                        const ProcessInfo &rCurrentProcessInfo) const override;
+
+    void GetDofList(
+        DofsVectorType& rElementalDofList,
+        const ProcessInfo& rCurrentProcessInfo) const override;
+            
+    void GetValuesVector(Vector& rValues,int Step = 0) const override;
+
+    void CalculateLocalSystem(MatrixType &rLeftHandSideMatrix,
+        VectorType &rRightHandSideVector,
+        const ProcessInfo &rCurrentProcessInfo) override;
 
     private:
 
