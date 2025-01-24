@@ -23,43 +23,40 @@
 
 namespace Kratos
 {
-    /**
-     * @class CoverElement3D3N
-     *
-     * @brief This is an element to cover the surface of a ring net
-     *
-     * @author Johanna Sigeneger
-     */
+/**
+ * @class CoverElement3D3N
+ *
+ * @brief This is an element to cover the surface of a ring net
+ *
+ * @author Johanna Sigeneger
+ */
 
-    class KRATOS_API(CABLE_NET_APPLICATION) CoverElement3D3N : public Element
-    {
-    protected:
+class KRATOS_API(CABLE_NET_APPLICATION) CoverElement3D3N : public Element
+{
+protected:
 
-    public:
-        KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(CoverElement3D3N);
-
-
-        typedef Element BaseType;
-        typedef BaseType::GeometryType GeometryType;
-        typedef BaseType::NodesArrayType NodesArrayType;
-        typedef BaseType::PropertiesType PropertiesType;
-        typedef BaseType::IndexType IndexType;
-        typedef BaseType::SizeType SizeType;
-        typedef BaseType::MatrixType MatrixType;
-        typedef BaseType::VectorType VectorType;
-        typedef BaseType::EquationIdVectorType EquationIdVectorType;
-        typedef BaseType::DofsVectorType DofsVectorType;
+public:
+    KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(CoverElement3D3N);
 
 
-        CoverElement3D3N() {};
-        CoverElement3D3N(IndexType NewId,
-                        GeometryType::Pointer pGeometry);
-        CoverElement3D3N(IndexType NewId,
-                        GeometryType::Pointer pGeometry,
-                        PropertiesType::Pointer pProperties);
+    typedef Element BaseType;
+    typedef BaseType::GeometryType GeometryType;
+    typedef BaseType::NodesArrayType NodesArrayType;
+    typedef BaseType::PropertiesType PropertiesType;
+    typedef BaseType::IndexType IndexType;
+    typedef BaseType::SizeType SizeType;
+    typedef BaseType::MatrixType MatrixType;
+    typedef BaseType::VectorType VectorType;
+    typedef BaseType::EquationIdVectorType EquationIdVectorType;
+    typedef BaseType::DofsVectorType DofsVectorType;
 
 
-        ~CoverElement3D3N() override;
+    CoverElement3D3N() {};
+    CoverElement3D3N(IndexType NewId,
+                    GeometryType::Pointer pGeometry);
+    CoverElement3D3N(IndexType NewId,
+                    GeometryType::Pointer pGeometry,
+                    PropertiesType::Pointer pProperties);
 
     /**
      * @brief Creates a new element
@@ -100,11 +97,11 @@ namespace Kratos
         VectorType &rRightHandSideVector,
         const ProcessInfo &rCurrentProcessInfo) override;
 
-    private:
+private:
 
-        array_1d<double,3> GetNormal() const;
-    };
+    array_1d<double,3> GetNormal() const;
+};
 
 
-}
+} // namespace Kratos
 
