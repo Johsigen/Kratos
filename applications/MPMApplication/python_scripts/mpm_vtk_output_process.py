@@ -80,8 +80,8 @@ class MPMVtkOutputProcess(KratosMultiphysics.OutputProcess):
 
         self.__controller = KratosMultiphysics.OutputController(self.model, self.settings)
 
-        if not self.main_model_part.ProcessInfo[KratosMultiphysics.IS_RESTARTED]:
-            self.vtk_io.PrintOutput()
+        #if not self.main_model_part.ProcessInfo[KratosMultiphysics.IS_RESTARTED]:
+        #    self.vtk_io.PrintOutput()
 
     def PrintOutput(self) -> None:
         self.vtk_io.PrintOutput()
