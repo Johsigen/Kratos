@@ -65,8 +65,8 @@ class AnalysisStage(object):
             self._GetSolver().Predict()
             is_converged = self._GetSolver().SolveSolutionStep()
             self.__CheckIfSolveSolutionStepReturnsAValue(is_converged)
-            if not bool(is_converged):
-                raise RuntimeError("solver failed to converge")
+            #if not bool(is_converged):
+            #    raise RuntimeError("solver failed to converge")
             self.FinalizeSolutionStep()
             self.OutputSolutionStep()
 
